@@ -1,119 +1,111 @@
 package Wildcard_Matching;
 
-import org.apache.commons.lang.StringUtils;
-
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 
-public class Solution {
+public class Solution_mem {
 
     public boolean isMatch(String s, String p) {
         long start = System.currentTimeMillis();
-        String[] pts = splitPattern(p);
-        int[][] matrix = new int[s.length()+1][];
-        for (int i = 0; i < s.length()+1; i++) {
-            matrix[i] = new int[pts.length+1];
+        p = normalize(p);
+        if (p.length() == 0 || s.length() == 0) {
+            return s.length() == p.length() || p.equalsIgnoreCase("*");
+        }
+        int[][] matrix = new int[s.length() + 1][];
+        for (int i = 0; i < s.length() + 1; i++) {
+            matrix[i] = new int[p.length() + 1];
             Arrays.fill(matrix[i], 0);
         }
         matrix[0][0] = 1;
-        boolean reb = matching(s, 0, pts, 0, matrix);
+        boolean reb = matching(s, 0, p, 0, matrix);
         long end = System.currentTimeMillis();
         System.out.println("running time: " + (end - start));
         return reb;
     }
 
-
     /**
      * patterns like "?*", "*?", "**" can be normalized to "*";
      *
-     * @param ptn
+     * @param p
      * @return
      */
-    String[] splitPattern(String ptn) {
-        List<String> res = new ArrayList<String>();
-        StringBuffer cBuf = new StringBuffer();
-        int prevType = -1; // ? -> type 1; * -> type 2; else type 3
-        //FIXME ? * should be splitted
-        for (int i = 0; i < ptn.length(); i++) {
-            if (ptn.charAt(i) == '?' || ptn.charAt(i) == '*') {
-                if (prevType == 1) {
-                    // same as previous
-                    cBuf.append(ptn.charAt(i));
-                } else {
-                    // not the same as previous
-                    if (cBuf.length() != 0) {
-                        res.add(cBuf.toString());
-                        cBuf.setLength(0);
-                    }
-                    cBuf.append(ptn.charAt(i));
-                    prevType = 1;
-                }
+    String normalize(String p) {
+        StringBuffer sb = new StringBuffer();
+        StringBuffer wild = new StringBuffer();
+        boolean hasstar = false;
+        for (int i = 0; i < p.length(); i++) {
+            if (p.charAt(i) == '?' || p.charAt(i) == '*') {
+                wild.append(p.charAt(i));
+                if (p.charAt(i) == '*')
+                    hasstar = true;
             } else {
-                if (prevType == 2) {
-                    cBuf.append(ptn.charAt(i));
-                } else {
-                    if (cBuf.length() != 0) {
-                        String str = cBuf.toString();
-                        if (str.contains("*"))
-                            res.add("*");
-                        else
-                            res.add(str);
-                        cBuf.setLength(0);
+                if (wild.length() > 0) {
+                    if (hasstar) {
+                        sb.append('*');
+                    } else {
+                        sb.append(wild.toString());
                     }
-                    cBuf.append(ptn.charAt(i));
-                    prevType = 2;
+                    wild.setLength(0);
+                    hasstar = false;
                 }
+                sb.append(p.charAt(i));
             }
         }
-        if (cBuf.length() > 0) {
-            String str = cBuf.toString();
-            if (str.contains("*"))
-                res.add("*");
-            else res.add(str);
+        if (wild.length() > 0) {
+            if (hasstar) {
+                sb.append('*');
+            } else {
+                sb.append(wild.toString());
+            }
+            wild.setLength(0);
         }
-        return res.toArray(new String[0]);
+        return sb.toString();
     }
 
-    private boolean matching(String s, int ss, String[] p, int sp, int[][] matrix) {
-        if(ss>s.length()||sp>p.length)return false;
-        if (matrix[s.length() - ss][p.length - sp] != 0) {
-            return matrix[s.length() - ss][p.length - sp] == 1 ? true : false;
-        }
-        boolean res = false;
-        if (s.length() - ss == 0) {
-            if (p.length - sp == 0 || (p.length - sp == 1) && p[p.length - 1].equals("*")) {
-                res = true;
-            } else res = false;
-        } else {
-            if(p.length==sp)
-                res=false;
-            else {
-                if (p[sp].equals("*")) {
-                    res = matching(s, ss + 1, p, sp + 1, matrix) ||
-                            matching(s, ss, p, sp + 1, matrix) ||
-                            matching(s, ss + 1, p, sp, matrix);
-                } else if (p[sp].startsWith("?")) {
-                    res = matching(s, ss + p[sp].length(), p, sp + 1, matrix);
-                } else {
-                    if(ss+p[sp].length()>s.length())
-                        res=false;
-                    else
-                    res = s.substring(ss, ss + p[sp].length()).equals(p[sp])
-                            && matching(s, ss + p[sp].length(), p, sp + 1, matrix);
-                }
-            }
+    private boolean matching(String s, int ss, String p, int sp, int[][] matrix) {
+        if (matrix[s.length()-ss][p.length()-sp] != 0) {
+            // already got the value;
+            return matrix[s.length()-ss][p.length()-sp] == 1;
         }
 
-        matrix[s.length() - ss][p.length - sp] = res ? 1 : -1;
+
+        boolean res;
+        if (shorterThanPattern(s, ss, p, sp)) {
+            res = false;
+        } else {
+            if (p.length()-sp == 0 || s.length()-ss == 0) {
+                res = s.length()-ss == p.length()-sp || p.substring(sp).equalsIgnoreCase("*");
+            } else if (p.startsWith("?", sp)) {
+                res = matching(s, ss+1, p, sp+1, matrix);
+            } else if (p.startsWith("*", sp)) {
+                res = matching(s, ss+1, p, sp, matrix) || matching(s,ss, p, sp+1, matrix);
+            } else {
+                res = s.charAt(ss) == p.charAt(sp) && matching(s,ss+1, p, sp+1, matrix);
+            }
+        }
+        matrix[s.length()-ss][p.length()-sp] = res ? 1 : -1;
         return res;
     }
 
+    private boolean shorterThanPattern(String s, int ss, String p, int sp) {
+        if (s.length()-ss > p.length()-sp) return false;
+        if (s.length()-ss + numStar(p, sp) < p.length()-sp)
+            return true;
+        return false;
+    }
+
+    private int numStar(String p, int sp) {
+        int count = 0;
+        for (int i = sp; i < p.length(); i++) {
+            if (p.charAt(i) == '*')
+                count++;
+        }
+        return count;
+    }
+
+
     public static void main(String[] args) {
-        Solution s = new Solution();
-//        System.out.println(StringUtils.join(s.splitPattern("*a*"), "|"));
-//        System.out.println(StringUtils.join(s.splitPattern("?n*?ba***acd??m?*c*"), "|"));
-        System.out.println(s.isMatch("b", "?*?"));
+        Solution_mem s = new Solution_mem();
+//        System.out.println(s.normalize("aaa"));
         System.out.println(s.isMatch("aa", "a"));
         System.out.println(s.isMatch("abbabbbaabaaabbbbbabbabbabbbabbaaabbbababbabaaabbab",
                 "*aabb***aa**a******aa*"));
