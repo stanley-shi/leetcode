@@ -1,6 +1,7 @@
 package Shortest_Palindrome;
 
 import org.junit.Test;
+import org.omg.PortableInterceptor.SYSTEM_EXCEPTION;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -8,10 +9,10 @@ import static org.junit.Assert.fail;
 
 public class Solution {
     public String shortestPalindrome(String s) {
-        if(isPalindrome(s))return s;
+        if(isPalindrome(s, s.length()))return s;
         int i = 1;
         for(;i<s.length();i++){
-            if(isPalindrome(s.substring(0, s.length()-i))){
+            if(isPalindrome(s, s.length()-i)){
                 break;
             }
         }
@@ -23,11 +24,11 @@ public class Solution {
         return new StringBuffer(substring).reverse().toString();
     }
 
-    private boolean isPalindrome(String str){
-        if(str.length()<=1)return true;
+    private boolean isPalindrome(String str, int endIndex){
+        if(endIndex<1)return true;
         boolean match = true;
-        for(int i=0;i<str.length()/2;i++){
-            if(str.charAt(i)!='?' && str.charAt(i)!=str.charAt(str.length()-i-1)){
+        for(int i=0;i<endIndex/2;i++){
+            if(str.charAt(i)!=str.charAt(endIndex-1-i)){
                 match = false;
                 break;
             }
@@ -665,5 +666,10 @@ public class Solution {
 "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" +
 "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" +
 "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+        long start = System.currentTimeMillis();
+        System.out.println(shortestPalindrome(str));
+
+        long end = System.currentTimeMillis();
+        System.out.println("time: "+(end-start));
     }
 }
