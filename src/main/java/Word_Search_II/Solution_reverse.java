@@ -5,7 +5,7 @@ import org.junit.Test;
 
 import java.util.*;
 
-public class Solution {
+public class Solution_reverse {
     public List<String> findWords(char[][] board, String[] words) {
         List<String> res = new ArrayList<String>();
         Map<Character, List<Integer>> charPosMap = new HashMap<Character, List<Integer>>();
@@ -26,6 +26,9 @@ public class Solution {
             List<Integer> pos = getCharPositions(board, word.charAt(i));
             charPosMap.put(c, pos);
         }
+
+
+
         List<Integer> usedPos = new ArrayList<Integer>();
         boolean res = canFindRest(word, 0, -1, charPosMap, usedPos, board[0].length);
         long end=System.currentTimeMillis();
@@ -42,9 +45,12 @@ public class Solution {
             if (isNear(prevPos, pos, width)) {
                 usedPos.add(pos);
                 boolean res = canFindRest(word, ind + 1, pos, charPos, usedPos, width);
-                if (res) return true;
+                if (res) {
+                    usedPos.remove(Integer.valueOf(pos));
+                    return true;
+                }
                 else {
-                    usedPos.remove(pos);
+                    usedPos.remove(Integer.valueOf(pos));
                 }
             }
         }
