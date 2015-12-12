@@ -27,7 +27,11 @@ public class Solution_reverse {
             charPosMap.put(c, pos);
         }
 
+        if(word.length()==1){
+            return charPosMap.containsKey(word.charAt(0));
+        }
 
+        List<Integer>[] charList= shrinkMap(charPosMap, word);
 
         List<Integer> usedPos = new ArrayList<Integer>();
         boolean res = canFindRest(word, 0, -1, charPosMap, usedPos, board[0].length);
@@ -35,6 +39,21 @@ public class Solution_reverse {
         System.out.println("check word["+word+"] done with time: "+(end-start));
         return res;
 
+    }
+
+    @SuppressWarnings("unchecked")
+    private List<Integer>[] shrinkMap(Map<Character, List<Integer>> charPosMap, String word) {
+        List<List<Integer>> res = new ArrayList<List<Integer>>();
+        Collections.fill(res,null);
+        for(int i =0;i<word.length()-1;i++){
+            if(res.get(i)==null)
+            res.set(i,new ArrayList<Integer>(charPosMap.get(word.charAt(i))));
+            if(res.get(i+1)==null)
+            res.set(i+1, new ArrayList<Integer>(charPosMap.get(word.charAt(i+1))));
+            List<Integer> l1 = res.get(i);
+            List<Integer> l2 = res.get(2);
+        }
+        return (List<Integer>[]) res.toArray();
     }
 
     private boolean canFindRest(String word, int ind, int prevPos, Map<Character, List<Integer>> charPos, List<Integer> usedPos, int width) {
