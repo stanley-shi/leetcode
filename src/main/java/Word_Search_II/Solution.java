@@ -15,15 +15,10 @@ public class Solution {
     public static class TrieNode {
         char val;
         TrieNode[] children = new TrieNode[26];
-        ;
         TrieNode parent;
         boolean isLeaf;
         String word;
         List<int[]> routes;
-        int depth = 0;
-
-        TrieNode() {
-        }
     }
 
     public static class Trie {
@@ -41,7 +36,6 @@ public class Solution {
                     TrieNode node = new TrieNode();
                     node.val = word.charAt(i);
                     node.parent = cnode;
-                    node.depth = i + 1;
                     cnode.children[ind] = node;
 
                 }
@@ -51,22 +45,6 @@ public class Solution {
             cnode.word = word;
         }
 
-        void traverse() {
-            traverseNode(root);
-        }
-
-        private void traverseNode(TrieNode node) {
-            if (node.isLeaf) {
-                print(node.word);
-            }
-            for (TrieNode nc : node.children) {
-                if (null != nc) traverseNode(nc);
-            }
-        }
-
-        private void print(String word) {
-            System.out.println(word);
-        }
     }
 
     public List<String> findWords(char[][] board, String[] words) {
@@ -81,8 +59,22 @@ public class Solution {
                 charPosMap.put(c, pos);
             }
         }
-
-        traverse(trie.root, charPosMap, board);
+        for (TrieNode nc : trie.root.children) {
+            if (nc == null) continue;
+            nc.routes = new ArrayList<int[]>();
+            if (!charPosMap.containsKey(nc.val)) {
+                // char not exist
+                continue;
+            } else {
+                for (Integer pos : charPosMap.get(nc.val)) {
+                    nc.routes.add(new int[]{pos});
+                }
+            }
+        }
+        for (TrieNode nc : trie.root.children) {
+            if (nc == null || nc.routes == null) continue;
+            traverseMatch(nc, charPosMap, board);
+        }
 
         return getWords(trie);
 
@@ -91,121 +83,75 @@ public class Solution {
     private List<String> getWords(Trie trie) {
         List<String> res = new ArrayList<String>();
         traverse(trie.root, res);
-
         return res;
     }
 
     private void traverse(TrieNode node, List<String> res) {
-        if(node==null )return;
-        if(node.val!=0&&node.routes==null)return;
-        if(node.isLeaf &&node.routes.size()>0){
+        if (node == null) return;
+        if (node.val != 0 && node.routes == null) return;
+        if (node.isLeaf && node.routes.size() > 0) {
             res.add(node.word);
-        } for(TrieNode nc: node.children){
-            if(null!=nc) traverse(nc, res);
+        }
+        for (TrieNode nc : node.children) {
+            if (null != nc) traverse(nc, res);
         }
     }
 
-    private void traverse(TrieNode node, Map<Character, List<Integer>> charPosMap, char[][] board) {
-        if (node.val == 0) {
-            for (TrieNode nc : node.children) {
-                if (nc == null) continue;
-                nc.routes = new ArrayList<int[]>();
-                if (!charPosMap.containsKey(nc.val)) {
-                    // char not exist
-                    continue;
-                } else {
-                    for (Integer pos : charPosMap.get(nc.val)) {
-                        nc.routes.add(new int[]{pos});
-                    }
-                }
+    private void traverseMatch(TrieNode node, Map<Character, List<Integer>> charPosMap, char[][] board) {
+        for (int[] route : node.routes) {
+            // for each adjacency node on board;
+            int lastCharPos = route[route.length - 1];
+            int i = lastCharPos / board[0].length;
+            int j = lastCharPos % board[0].length;
+
+            if (i > 0) {
+                char c = board[i - 1][j];
+                int pos = (i - 1) * board[0].length + j;
+                addRoute(node, route, c, pos);
             }
-        } else {
-            // not root node
-            for (int[] route : node.routes) {
-                // for each adjecency node on board;
-                int lastCharPos = route[route.length - 1];
-                int i = lastCharPos / board[0].length;
-                int j = lastCharPos % board[0].length;
-
-                if (i > 0) {
-                    char c = board[i - 1][j];
-                    int pos = (i - 1) * board[0].length + j;
-                    if (!contains(route, pos)) {
-                        TrieNode child = node.children[c - 'a'];
-                        if (child != null) {
-                            if(null==child.routes){
-                                child.routes = new ArrayList<int[]>();
-                            }
-                            int[] newroute = new int[route.length+1];
-                            System.arraycopy(route,0,newroute,0,route.length);
-                            newroute[route.length]=pos;
-                            child.routes.add(newroute);
-                        }
-                    }
-
-                }
-                if (i < board.length - 1) {
-                    char c = board[i + 1][j];
-                    int pos = (i + 1) * board[0].length + j;
-                    if (!contains(route, pos)) {
-                        TrieNode child = node.children[c - 'a'];
-                        if (child != null) {
-                            if(null==child.routes){
-                                child.routes = new ArrayList<int[]>();
-                            }
-                            int[] newroute = new int[route.length+1];
-                            System.arraycopy(route,0,newroute,0,route.length);
-                            newroute[route.length]=pos;
-                            child.routes.add(newroute);
-                        }
-                    }
-                }
-                if (j > 0) {
-                    char c = board[i ][j-1];
-                    int pos = (i ) * board[0].length + j-1;
-                    if (!contains(route, pos)) {
-                        TrieNode child = node.children[c - 'a'];
-                        if (child != null) {
-                            if(null==child.routes){
-                                child.routes = new ArrayList<int[]>();
-                            }
-                            int[] newroute = new int[route.length+1];
-                            System.arraycopy(route,0,newroute,0,route.length);
-                            newroute[route.length]=pos;
-                            child.routes.add(newroute);
-                        }
-                    }
-                }
-                if (j < board[0].length - 1) {
-                    char c = board[i ][j+1];
-                    int pos = (i ) * board[0].length + j+1;
-                    if (!contains(route, pos)) {
-                        TrieNode child = node.children[c - 'a'];
-                        if (child != null) {
-                            if(null==child.routes){
-                                child.routes = new ArrayList<int[]>();
-                            }
-                            int[] newroute = new int[route.length+1];
-                            System.arraycopy(route,0,newroute,0,route.length);
-                            newroute[route.length]=pos;
-                            child.routes.add(newroute);
-                        }
-                    }
-                }
-
+            if (i < board.length - 1) {
+                char c = board[i + 1][j];
+                int pos = (i + 1) * board[0].length + j;
+                addRoute(node, route, c, pos);
             }
+            if (j > 0) {
+                char c = board[i][j - 1];
+                int pos = (i) * board[0].length + j - 1;
+                addRoute(node, route, c, pos);
+            }
+            if (j < board[0].length - 1) {
+                char c = board[i][j + 1];
+                int pos = (i) * board[0].length + j + 1;
+                addRoute(node, route, c, pos);
+            }
+
         }
 
         for (TrieNode nc : node.children) {
-            if (nc==null || nc.routes == null) continue;
-            traverse(nc, charPosMap, board);
+            if (nc == null || nc.routes == null) continue;
+            traverseMatch(nc, charPosMap, board);
         }
 
     }
 
+    private void addRoute(TrieNode node, int[] route, char c, int pos) {
+        if (!contains(route, pos)) {
+            TrieNode child = node.children[c - 'a'];
+            if (child != null) {
+                if (null == child.routes) {
+                    child.routes = new ArrayList<int[]>();
+                }
+                int[] newroute = new int[route.length + 1];
+                System.arraycopy(route, 0, newroute, 0, route.length);
+                newroute[route.length] = pos;
+                child.routes.add(newroute);
+            }
+        }
+    }
+
     private boolean contains(int[] route, int pos) {
-        for(int i: route){
-            if(i==pos)return true;
+        for (int i : route) {
+            if (i == pos) return true;
         }
         return false;
     }

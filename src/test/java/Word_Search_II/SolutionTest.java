@@ -14,15 +14,6 @@ public class SolutionTest {
 
     Solution s = new Solution();
     String[] words = {"oath","pea","eat","rain"};
-    @Test
-    public void test(){
-        Solution.Trie trie = new Solution.Trie();
-        for(String word: words){
-            trie.addWord(word);
-        }
-        trie.traverse();
-        System.out.println(trie);
-    }
 
     @Test
     public void test2() {
