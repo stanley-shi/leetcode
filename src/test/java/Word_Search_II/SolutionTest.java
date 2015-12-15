@@ -3,120 +3,25 @@ package Word_Search_II;
 import org.apache.commons.lang.StringUtils;
 import org.junit.Test;
 
-import java.util.*;
+import java.util.List;
 
-public class Solution_reverse {
-    public List<String> findWords(char[][] board, String[] words) {
-        List<String> res = new ArrayList<String>();
-        Map<Character, List<Integer>> charPosMap = new HashMap<Character, List<Integer>>();
-        for (String word : words) {
-            if (canFind(board, word, charPosMap)) {
-                res.add(word);
-            }
-        }
-        Collections.sort(res);
-        return res;
-    }
+import static org.junit.Assert.*;
 
-    private boolean canFind(char[][] board, String word, Map<Character, List<Integer>> charPosMap) {
-        long start=System.currentTimeMillis();
-        for (int i = 0; i < word.length(); i++) {
-            char c = word.charAt(i);
-            if (charPosMap.containsKey(c)) continue;
-            List<Integer> pos = getCharPositions(board, word.charAt(i));
-            charPosMap.put(c, pos);
-        }
+/**
+ * Created by demshi on 12/15/15.
+ */
+public class SolutionTest {
 
-        if(word.length()==1){
-            return charPosMap.containsKey(word.charAt(0));
-        }
-
-        List<Integer>[] charList= shrinkMap(charPosMap, word);
-
-        List<Integer> usedPos = new ArrayList<Integer>();
-        boolean res = canFindRest(word, 0, -1, charPosMap, usedPos, board[0].length);
-        long end=System.currentTimeMillis();
-        System.out.println("check word["+word+"] done with time: "+(end-start));
-        return res;
-
-    }
-
-    @SuppressWarnings("unchecked")
-    private List<Integer>[] shrinkMap(Map<Character, List<Integer>> charPosMap, String word) {
-        List<List<Integer>> res = new ArrayList<List<Integer>>();
-        Collections.fill(res,null);
-        for(int i =0;i<word.length()-1;i++){
-            if(res.get(i)==null)
-            res.set(i,new ArrayList<Integer>(charPosMap.get(word.charAt(i))));
-            if(res.get(i+1)==null)
-            res.set(i+1, new ArrayList<Integer>(charPosMap.get(word.charAt(i+1))));
-            List<Integer> l1 = res.get(i);
-            List<Integer> l2 = res.get(2);
-
-
-
-        }
-        return (List<Integer>[]) res.toArray();
-    }
-
-    private boolean canFindRest(String word, int ind, int prevPos, Map<Character, List<Integer>> charPos, List<Integer> usedPos, int width) {
-        if (ind == word.length()) return true;
-        char cc = word.charAt(ind);
-        for (Integer pos : charPos.get(cc)) {
-            if(usedPos.contains(pos))continue;
-            if (isNear(prevPos, pos, width)) {
-                usedPos.add(pos);
-                boolean res = canFindRest(word, ind + 1, pos, charPos, usedPos, width);
-                if (res) {
-                    usedPos.remove(Integer.valueOf(pos));
-                    return true;
-                }
-                else {
-                    usedPos.remove(Integer.valueOf(pos));
-                }
-            }
-        }
-        return false;
-    }
-
-    private boolean isNear(int prevPos, Integer pos, int width) {
-        if (prevPos == -1) return true;
-        else {
-            if (pos - prevPos == 1 || pos - prevPos == -1 || pos - prevPos == width || pos - prevPos == 0 - width)
-                return true;
-            else return false;
-        }
-    }
-
-    /**
-     * Which positions contains the char
-     *
-     * @param board
-     * @param c
-     * @return
-     */
-    private List<Integer> getCharPositions(char[][] board, char c) {
-        List<Integer> res = new ArrayList<Integer>();
-        for (int i = 0; i < board.length; i++) {
-            for (int j = 0; j < board[0].length; j++) {
-                if (board[i][j] == c) res.add(i * board[0].length + j);
-            }
-        }
-        return res;
-    }
-
-
+    Solution s = new Solution();
+    String[] words = {"oath","pea","eat","rain"};
     @Test
-    public void test() {
-        char[][] board = new char[][]{
-                {'o', 'a', 'a', 'n'},
-                {'e', 't', 'a', 'e'},
-                {'i', 'h', 'k', 'r'},
-                {'i', 'f', 'l', 'v'}
-        };
-        String[] words = {"oath", "pea", "eat", "rain"};
-        List<String> res = findWords(board, words);
-        System.out.println(StringUtils.join(res, ","));
+    public void test(){
+        Solution.Trie trie = new Solution.Trie();
+        for(String word: words){
+            trie.addWord(word);
+        }
+        trie.traverse();
+        System.out.println(trie);
     }
 
     @Test
@@ -195,9 +100,10 @@ public class Solution_reverse {
             cboard[i] = board[i].toCharArray();
         }
         long start = System.currentTimeMillis();
-        List<String> list = findWords(cboard, words);
+        List<String> list = s.findWords(cboard, words);
         long end = System.currentTimeMillis();
         System.out.println("finished in : " + (end - start));
         System.out.println(StringUtils.join(list, ","));
     }
+
 }
